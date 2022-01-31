@@ -1,0 +1,247 @@
+#include <criterion/criterion.h>
+#include <string.h>
+#include "../src/morse.h"
+
+Test(test_decode_digital, only_zeros_return_zero)
+{
+	char	*in = "0000000000000000000";
+
+	char	*res = decodebits(in);
+
+	cr_assert_str_empty(res);
+}
+
+Test(test_decode_digital, indistinguishable_information_resturns_NULL)
+{
+	char	*in = "11111";
+
+	char	*res = decodebits(in);
+
+	cr_assert_str_eq(res, ".");
+}
+
+Test(test_decode_digital, invalid_time_unit_resturns_NULL)
+{
+	char	*in = "1100111";
+
+	char	*res = decodebits(in);
+
+	cr_assert_null(res);
+}
+
+Test(test_decode_digital, indistinguishable_information_returns_NULL_with_leading_zeros)
+{
+	char	*in = "0011111";
+
+	char	*res = decodebits(in);
+
+
+	cr_assert_str_eq(res, ".");
+}
+
+Test(test_decode_digital, basic_valid_input)
+{
+	char	*in = "10";
+
+	char	*res = decodebits(in);
+
+	cr_assert_str_eq(res, ".");
+}
+
+Test(find_time_unit, basic_valid_input)
+{
+	char	*in = "10";
+
+	int res = min_consecutive_char(in, '1');
+
+	cr_assert_eq(1, res);
+}
+
+Test(find_time_unit, not_so_basic_valid_input)
+{
+	char	*in = "1110011000000001111111000111110111010011";
+
+	int res = min_consecutive_char(in, '1');
+
+	cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, not_so_basic_valid_input_equ_2)
+{
+	char	*in = "101";
+
+	int res = MIN(min_consecutive_char(in, '1'), min_consecutive_char(in,'0'));
+
+	cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, leading_zero)
+{
+	char	*in = "010";
+
+	int res = min_consecutive_char(in, '1');
+
+	cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, leading_ones)
+{
+char	*in = "110";
+
+int res = min_consecutive_char(in, '0');
+
+cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, min_first)
+{
+char	*in = "01011";
+
+int res = min_consecutive_char(in, '1');
+
+cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, min_last)
+{
+char	*in = "11010";
+
+int res = min_consecutive_char(in, '0');
+
+cr_assert_eq(1, res, "act %d", res);
+}
+
+Test(find_time_unit, none_encountered_returns_INTMAX)
+{
+	char	*in = "0";
+
+	int res = min_consecutive_char(in, '1');
+
+	cr_assert_eq(INT_MAX, res, "act %d", res);
+}
+
+Test(check_time_unit, valid_string_returns_one)
+{
+	char	*in = "110011";
+
+	int res = is_valid_time_unit(in, 2);
+
+	cr_assert_eq(res, 1);
+}
+
+Test(check_time_unit, string_size_not_multiple_of_time_unit_returns_zero)
+{
+char	*in = "1100011";
+
+int res = is_valid_time_unit(in, 2);
+
+cr_assert_eq(res, 0);
+}
+
+Test(check_time_unit, invalid_string_returns_one)
+{
+char	*in = "100011";
+
+int res = is_valid_time_unit(in, 2);
+
+cr_assert_eq(res, 0);
+}
+
+Test(check_time_unit, valid_string_with_odd_time_unit_returns_one)
+{
+char	*in = "111000111";
+
+int res = is_valid_time_unit(in, 3);
+
+cr_assert_eq(res, 1);
+}
+
+Test(check_time_unit, invalid_string_with_odd_time_unit_returns_one)
+{
+char	*in = "11100111";
+
+int res = is_valid_time_unit(in, 3);
+
+cr_assert_eq(res, 0);
+}
+
+Test(check_time_unit, valid_string_with_one_time_unit_returns_zero)
+{
+char	*in = "10101";
+
+int res = is_valid_time_unit(in, 1);
+
+cr_assert_eq(res, 1);
+}
+
+Test(check_time_unit, invalid_string_with_one_time_unit_returns_one)
+{
+char	*in = "10001";
+
+int res = is_valid_time_unit(in, 1);
+
+cr_assert_eq(res, 1);
+}
+
+Test(check_time_unit, string_length_one_time_unit_of_one_returns_one)
+{
+char	*in = "1";
+
+int res = is_valid_time_unit(in, 1);
+
+cr_assert_eq(res, 1);
+}
+
+Test(test_decode_digital, trailing_zeros_dont_invalidate, .disabled=true)
+{
+char	*in = "1100110";
+
+char	*res = decodebits(in);
+
+cr_assert_str_eq(res, "..");
+}
+
+//time unit is 2
+//	11 > '.'
+//	111111 > '-'
+//	00 > ' '
+//	000000 > Pause between characters inside a word
+//	00000000000000 >  Pause between words
+
+Test(test_decode_digital, return_a_dot)
+{
+	char	*in = "11";
+
+	char	*res = decodebits(in);
+
+	cr_assert_str_eq(res, ".");
+}
+
+Test(test_decode_digital, return_two_dashes, .disabled=true)
+{
+	char	*in = "1110111";
+
+	char	*res = decodebits(in);
+
+	cr_assert_str_eq(res, "-\t-");
+}
+
+Test(test_translate, return_two_dots)
+{
+char	*in = "110011";
+
+char	*res = translate(in, 2);
+
+cr_assert_str_eq(res, ".\t.");
+}
+
+Test(test_translate, return_two_dashes)
+{
+	char	*in = "1110111";
+
+	char	*res = translate(in, 1);
+
+cr_assert_str_eq(res, "-\t-");
+}
+
+// test invalid morse code	char	*in = "1101111"; -> should return NULL
